@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Tracker V1</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; }
+        .sidebar { 
+            width: 200px; background: #333; color: white; height: 100vh; padding: 20px;
+            position: absolute; z-index: 10;
+        }
+        .main { margin-left: 240px; padding: 20px; width: 100%; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { margin-bottom: 10px; display: block; width: 100%; padding: 8px; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>V1 Tracker</h2>
+    <hr>
+    <p>Add Stock:</p>
+    <input type="text" id="sym" placeholder="Symbol">
+    <input type="number" id="qty" placeholder="Shares">
+    <button onclick="addStock()">Add Stock</button>
+</div>
+
+<div class="main">
+    <h1>Dashboard (V1 Prototype)</h1>
+    <div class="card">
+        <h3>Total Portfolio Value</h3>
+        <h2 id="total">$0.00</h2>
+    </div>
+    <div class="card">
+        <h3>Performance (Simple Price Data)</h3>
+        <canvas id="myChart" style="height:200px"></canvas>
+    </div>
+    <div class="card">
+        <h3>Holdings</h3>
+        <table id="stockTable">
+            <thead>
+                <tr><th>Ticker</th><th>Shares</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let stocks = [];
+    let myChart = null;
+
+    async function addStock() {
+        const s = document.getElementById('sym').value.toUpperCase();
+        const q = document.getElementById('qty').value;
+        const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${s}&token=d67ahkhr01qmckkcnffgd67ahkhr01qmckkcnfg0`);
+        const data = await res.json();
+        if(data.c) {
+            stocks.push({ s, q, p: data.c });
+            updateUI();
+        } else {
+            alert("Error finding stock");
+        }
+    }
+
+    function updateUI() {
+        let total = 0;
+        const tbody = document.querySelector("#stockTable tbody");
+        tbody.innerHTML = "";
+        stocks.forEach(stock => {
+            total += (stock.p * stock.q);
+            tbody.innerHTML += `<tr><td>${stock.s}</td><td>${stock.q}</td></tr>`;
+        });
+        document.getElementById('total').innerText = "$" + total.toFixed(2);
+        renderChart(total);
+    }
+
+    function renderChart(val) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                datasets: [{
+                    label: 'Portfolio Value',
+                    data: [val * 0.9, val * 0.95, val * 0.92, val * 0.98, val],
+                    borderColor: 'blue'
+                }]
+            }
+        });
+    }
+</script>
+</body>
+</html>
