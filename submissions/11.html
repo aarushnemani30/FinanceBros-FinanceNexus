@@ -2,70 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Nexus Ultra | Final v6.9</title>
+    <title>Nexus Ultra | Apex v18.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1"></script>
     <style>
         :root { 
-            --bg: #020617; --sidebar: #0f172a; --text: #f1f5f9; --subtext: #94a3b8;
-            --accent: #10b981; --border: rgba(255, 255, 255, 0.1); --glass: rgba(255, 255, 255, 0.03);
-            --danger: #ef4444; --warn: #f59e0b;
+            --bg: #020617; --card-bg: #0f172a; --text: #f8fafc; --subtext: #94a3b8;
+            --accent: #10b981; --border: rgba(255, 255, 255, 0.08); 
+            --danger: #ef4444; --warn: #f59e0b; --info: #3b82f6;
         }
         .light-mode {
-            --bg: #f8fafc; --sidebar: #ffffff; --text: #1e293b; --subtext: #64748b;
-            --border: rgba(0, 0, 0, 0.1); --glass: rgba(0, 0, 0, 0.02);
+            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --subtext: #64748b;
+            --border: rgba(0, 0, 0, 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); 
-            display: grid; grid-template-columns: 70px 1fr; height: 100vh; width: 100vw; overflow: hidden; 
-        }
-        body:has(.sidebar:hover) { grid-template-columns: 260px 1fr; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; width: 100vw; overflow: hidden; display: flex; }
 
-        .sidebar { background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 1000; overflow: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        .sidebar-header { 
-            height: 80px; display: flex; align-items: center; 
-            padding-left: 23px;
-            font-weight: 900; font-size: 1.4rem; letter-spacing: 2px; cursor: pointer; white-space: nowrap; color: var(--text);
+        .sidebar { 
+            width: 80px; height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); 
+            display: flex; flex-direction: column; position: fixed; z-index: 1000; 
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .sidebar:hover { width: 260px; box-shadow: 15px 0 40px rgba(0,0,0,0.4); }
+        .sidebar-header { height: 80px; display: flex; align-items: center; padding-left: 25px; font-weight: 900; font-size: 1.4rem; color: var(--text); cursor: pointer; }
         .sidebar-header span { color: var(--accent); }
-        
-        .nav-link { padding: 18px 22px; display: flex; align-items: center; cursor: pointer; color: var(--subtext); border-left: 4px solid transparent; white-space: nowrap; }
+        .nav-link { padding: 18px 25px; display: flex; align-items: center; cursor: pointer; color: var(--subtext); border-left: 4px solid transparent; white-space: nowrap; }
         .nav-link:hover, .nav-link.active { background: rgba(16, 185, 129, 0.1); color: var(--accent); border-left-color: var(--accent); }
-        .nav-icon { min-width: 26px; margin-right: 24px; font-style: normal; font-size: 1.2rem; display: flex; justify-content: center; }
+        .nav-icon { min-width: 30px; margin-right: 15px; font-size: 1.2rem; }
+        .nav-text { opacity: 0; transition: 0.2s; }
+        .sidebar:hover .nav-text { opacity: 1; }
+
+        .trade-desk { padding: 20px; background: rgba(0,0,0,0.3); opacity: 0; visibility: hidden; transition: 0.2s; position: absolute; bottom: 0; left: 0; width: 100%; }
+        .sidebar:hover .trade-desk { opacity: 1; visibility: visible; }
+
+        .main-view { flex-grow: 1; margin-left: 80px; padding: 40px; overflow-y: auto; height: 100vh; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
         
-        .trade-desk { padding: 20px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.1); opacity: 0; pointer-events: none; transition: 0.2s; position: relative; }
-        .sidebar:hover .trade-desk { opacity: 1; pointer-events: all; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: all 0.2s; position: relative; }
+        .clickable-card { cursor: pointer; }
+        .clickable-card:hover { transform: translateY(-5px); border-color: var(--accent); background: rgba(16, 185, 129, 0.05); }
+
+        .card h3 { font-size: 0.65rem; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; margin-bottom: 10px; }
+        .val { font-size: 1.6rem; font-weight: 800; }
+        
+        .meter { height: 4px; width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 10px; overflow: hidden; }
+        .meter-fill { height: 100%; background: var(--accent); transition: width 1s; }
+
+        input, select { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; outline: none; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         #searchSuggestions { 
-            position: absolute; bottom: 100%; left: 10px; right: 10px; background: var(--sidebar); 
-            border: 1px solid var(--accent); border-radius: 10px; max-height: 200px; overflow-y: auto; 
-            display: none; z-index: 3000; margin-bottom: 5px; box-shadow: 0 -10px 20px rgba(0,0,0,0.5);
+            position: absolute; bottom: 100%; left: 10px; right: 10px; background: var(--card-bg); 
+            border: 2px solid var(--accent); border-radius: 8px; max-height: 200px; overflow-y: auto; 
+            display: none; z-index: 2000; box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
         }
-        .suggest-item { padding: 12px; font-size: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .suggest-item:hover { background: var(--glass); color: var(--accent); }
-        .s-price-box { text-align: right; display: flex; flex-direction: column; }
-        .s-price { color: var(--accent); font-weight: bold; }
-        .s-label { font-size: 0.6rem; color: var(--subtext); text-transform: uppercase; }
-
-        .content { padding: 40px; overflow-y: auto; height: 100vh; position: relative; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 25px; cursor: pointer; }
-        .card:hover { border-color: var(--accent); transform: translateY(-2px); transition: 0.2s; }
-        .card h3 { font-size: 0.65rem; color: var(--subtext); text-transform: uppercase; margin-bottom: 10px; }
-        .val { font-size: 1.6rem; font-weight: 800; }
-
-        .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; height: 320px !important; max-height: 320px !important; margin-bottom: 40px; }
-        .chart-container { position: relative; height: 100% !important; width: 100% !important; overflow: hidden; }
+        .suggest-item { padding: 12px; font-size: 0.8rem; cursor: pointer; border-bottom: 1px solid var(--border); }
+        .suggest-item:hover { background: var(--accent); color: black; font-weight: bold; }
         
-        input, select { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 8px; outline: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        td, th { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        .sell-btn { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
+        .goal-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .btn-small { padding: 5px 10px; background: var(--accent); color: black; border: none; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -73,188 +74,259 @@
 <div class="sidebar">
     <div class="sidebar-header" onclick="switchTab('dash')">N<span>EXUS</span></div>
     <div class="nav-links" style="flex-grow:1">
-        <div class="nav-link active" id="btn-dash" onclick="switchTab('dash')"><i class="nav-icon">📊</i> Dashboard</div>
-        <div class="nav-link" id="btn-port" onclick="switchTab('port')"><i class="nav-icon">💼</i> Portfolio</div>
-        <div class="nav-link" id="btn-cash" onclick="switchTab('cash')"><i class="nav-icon">💳</i> Cash Flow</div>
-        <div class="nav-link" onclick="toggleTheme()"><i class="nav-icon">🌓</i> Theme</div>
+        <div class="nav-link active" id="btn-dash" onclick="switchTab('dash')"><i class="nav-icon">📊</i> <span class="nav-text">Dashboard</span></div>
+        <div class="nav-link" id="btn-port" onclick="switchTab('port')"><i class="nav-icon">💼</i> <span class="nav-text">Portfolio</span></div>
+        <div class="nav-link" id="btn-subs" onclick="switchTab('subs')"><i class="nav-icon">🔁</i> <span class="nav-text">Subscriptions</span></div>
+        <div class="nav-link" id="btn-cash" onclick="switchTab('cash')"><i class="nav-icon">💳</i> <span class="nav-text">Cash Ledger</span></div>
+        <div class="nav-link" id="btn-goals" onclick="switchTab('goals')"><i class="nav-icon">🎯</i> <span class="nav-text">Goals</span></div>
+        <div class="nav-link" onclick="toggleTheme()"><i class="nav-icon">🌓</i> <span class="nav-text">Theme</span></div>
     </div>
-    
     <div class="trade-desk">
         <div id="searchSuggestions"></div>
-        <input type="text" id="pSym" placeholder="Search (Apple, BTC...)" oninput="liveSearch(this.value)">
-        <input type="number" id="pQty" placeholder="Quantity">
-        <button onclick="addAsset()" style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:8px; font-weight:bold; cursor:pointer; color:black;">+ BUY ASSET</button>
+        <input type="text" id="pSym" placeholder="Search Asset" oninput="debouncedSearch(this.value)" autocomplete="off">
+        <input type="number" id="pQty" placeholder="Qty">
+        <button onclick="addAsset()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">ADD ASSET</button>
+        <select id="crashSelect" onchange="toggleCrash()" style="margin-top:10px; color:var(--danger); border-color:var(--danger);">
+            <option value="1">Real Market</option>
+            <option value="0.5">Crash (-50%)</option>
+        </select>
     </div>
 </div>
 
-<div class="content">
-    <div style="display:flex; justify-content:flex-end; margin-bottom:20px; gap:10px; align-items:center;">
-        <span style="font-size:0.7rem; color:var(--subtext)">CURRENCY:</span>
-        <select id="fx" style="width:auto; padding:5px; margin:0;" onchange="refresh()">
+<div class="main-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h1 id="viewTitle" style="font-weight: 900;">Command Center</h1>
+        <select id="fx" style="width:auto; margin:0;" onchange="refresh()">
             <option value="1">USD ($)</option>
             <option value="83.5">INR (₹)</option>
             <option value="0.92">EUR (€)</option>
-            <option value="0.78">GBP (£)</option>
         </select>
     </div>
 
     <div id="dash" class="tab-content active">
         <div class="grid">
-            <div class="card" onclick="switchTab('port')"><h3>Total Wealth</h3><div class="val" id="totalWealth">$0.00</div></div>
-            <div class="card" onclick="switchTab('cash')"><h3>Liquid Cash</h3><div class="val" id="sumCash">$0.00</div></div>
-            <div class="card"><h3>Monthly Burn</h3><div class="val" id="burnVal" style="color:var(--danger)">$0.00</div></div>
-            <div class="card"><h3>Survival Runway</h3><div class="val" id="runwayVal" style="color:var(--warn)">0 Days</div></div>
+            <div class="card clickable-card" onclick="switchTab('port')">
+                <h3>Net Worth</h3><div class="val" id="totalWealth">$0.00</div>
+                <div class="meter"><div class="meter-fill" id="healthFill"></div></div>
+            </div>
+            <div class="card clickable-card" onclick="switchTab('cash')">
+                <h3>Liquid Cash</h3><div class="val" id="sumCash">$0.00</div>
+                <small style="color:var(--accent); font-size:0.7rem;">+ Shield Enabled</small>
+            </div>
+            <div class="card clickable-card" onclick="switchTab('subs')">
+                <h3>Auto-Burn (Subs)</h3><div class="val" id="burnVal" style="color:var(--danger)">$0.00</div>
+                <small style="opacity:0.5; font-size:0.7rem;">Monthly Bills</small>
+            </div>
+            <div class="card">
+                <h3>Survival Runway</h3><div class="val" id="runwayVal" style="color:var(--info)">0 Days</div>
+                <small style="opacity:0.5; font-size:0.7rem;">Buffer</small>
+            </div>
         </div>
-        <div class="chart-row">
-            <div class="card chart-container"><h3>Wealth Trend</h3><canvas id="mainChart"></canvas></div>
-            <div class="card chart-container"><h3>Allocation</h3><canvas id="pieChart"></canvas></div>
+
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; height:380px;">
+            <div class="card">
+                <h3 style="margin-bottom:15px;">Wealth Timeline (Live)</h3>
+                <div style="height:280px;"><canvas id="mainChart"></canvas></div>
+            </div>
+            <div class="card">
+                <h3>Financial Grade</h3>
+                <div id="healthScore" style="font-size:3.5rem; font-weight:900; color:var(--accent); margin:10px 0;">--</div>
+                <p id="healthAdvice" style="font-size:0.8rem; color:var(--subtext); line-height:1.5;"></p>
+                <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+                <div style="display:flex; justify-content:space-between;"><small>Main Goal Progress</small><small id="goalPerc">0%</small></div>
+                <div class="meter"><div class="meter-fill" id="goalFill" style="background:var(--info)"></div></div>
+            </div>
         </div>
     </div>
 
     <div id="port" class="tab-content">
-        <div class="card"><h2>Active Positions</h2><table id="portTable"><thead><tr><th>Asset</th><th>Qty</th><th>Price</th><th>Total</th><th>Action</th></tr></thead><tbody></tbody></table></div>
+        <div class="card">
+            <h2>Active Portfolio</h2>
+            <table id="portTable" style="margin-top:20px;"><thead><tr><th>Asset</th><th>Qty</th><th>Price</th><th>Value</th><th>Action</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="subs" class="tab-content">
+        <div class="card">
+            <h2>Monthly Subscriptions</h2>
+            <div style="display:flex; gap:12px; margin:20px 0;">
+                <input type="text" id="sName" placeholder="Subscription Name">
+                <input type="number" id="sAmt" placeholder="Monthly Cost">
+                <button onclick="addSubs()" style="padding:0 30px; background:var(--accent); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">ADD</button>
+            </div>
+            <table id="subsTable"><thead><tr><th>Name</th><th>Monthly Cost</th><th>Action</th></tr></thead><tbody></tbody></table>
+        </div>
     </div>
 
     <div id="cash" class="tab-content">
         <div class="card">
             <h2>Cash Ledger</h2>
-            <div style="display:flex; gap:10px; margin: 20px 0;">
-                <input type="text" id="cDesc" placeholder="Label" style="margin:0">
-                <input type="number" id="cAmt" placeholder="Amount" style="margin:0">
-                <button onclick="addCash()" style="padding:10px 20px; background:var(--accent); border:none; border-radius:10px; font-weight:bold; cursor:pointer; color:black;">Record</button>
+            <div style="display:flex; gap:12px; margin:20px 0;">
+                <input type="text" id="cDesc" placeholder="Source/Expense Name">
+                <input type="number" id="cAmt" placeholder="Amount">
+                <button onclick="addCash()" style="padding:0 30px; background:var(--accent); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">LOG</button>
             </div>
-            <table id="cashTable"><thead><tr><th>Date</th><th>Label</th><th>Amount</th><th>Action</th></tr></thead><tbody></tbody></table>
+            <table id="cashTable"><thead><tr><th>Date</th><th>Label</th><th>Local Amount</th><th>Action</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="goals" class="tab-content">
+        <div class="card">
+            <h2>Goal Manager</h2>
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:12px; margin:20px 0;">
+                <input type="text" id="gName" placeholder="Goal (e.g. Vacation)">
+                <input type="number" id="gTarget" placeholder="Target Amount">
+                <button onclick="addGoal()" style="background:var(--info); border:none; border-radius:8px; font-weight:bold; cursor:pointer; color:white;">NEW GOAL</button>
+            </div>
+            <div id="goalsList"></div>
         </div>
     </div>
 </div>
 
 <script>
     const KEY = 'd67ahkhr01qmckkcnffgd67ahkhr01qmckkcnfg0';
-    let state = JSON.parse(localStorage.getItem('nexus_final')) || { assets: [], cash: [] };
-    let mainChart, pieChart;
+    let state = JSON.parse(localStorage.getItem('nexus_apex_v18')) || { assets: [], cash: [], subs: [], history: [], goal: 100000, subGoals: [] };
+    let mainChart, searchTimer, crashMultiplier = 1.0;
 
     function toggleTheme() { document.body.classList.toggle('light-mode'); }
+    function toggleCrash() { crashMultiplier = parseFloat(document.getElementById('crashSelect').value); refresh(); }
+
     function switchTab(id) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('btn-' + id)?.classList.add('active');
+        document.getElementById('btn-' + id).classList.add('active');
+        document.getElementById('viewTitle').innerText = id.charAt(0).toUpperCase() + id.slice(1);
         refresh();
     }
 
+    // SEARCH & ASSETS
+    function debouncedSearch(q) { clearTimeout(searchTimer); searchTimer = setTimeout(() => liveSearch(q), 300); }
     async function liveSearch(query) {
         const box = document.getElementById('searchSuggestions');
         if (query.length < 2) { box.style.display = 'none'; return; }
         try {
-            const r = await fetch(`https://finnhub.io/api/v1/search?q=${query}&token=${KEY}`).then(res => res.json());
-            box.innerHTML = '';
-            if (r.result && r.result.length > 0) {
-                box.style.display = 'block';
-                for (const item of r.result.slice(0, 8)) {
-                    // Detect if it's crypto based on symbol or description
-                    const isCrypto = item.type === "Crypto" || item.symbol.includes("BINANCE:") || ["BTC", "ETH", "SOL", "DOGE"].includes(item.symbol);
-                    const displaySymbol = isCrypto ? item.symbol.replace("BINANCE:", "") : item.symbol;
-                    
-                    const q = await fetch(`https://finnhub.io/api/v1/quote?symbol=${item.symbol}&token=${KEY}`).then(res => res.json());
-                    const price = q.c ? `$${q.c.toLocaleString()}` : 'N/A';
-                    
-                    const div = document.createElement('div');
-                    div.className = 'suggest-item';
-                    div.innerHTML = `
-                        <span>${displaySymbol} | ${item.description}</span>
-                        <div class="s-price-box">
-                            <span class="s-price">${price}</span>
-                            <span class="s-label">${isCrypto ? '[CRYPTO]' : '[STOCK]'}</span>
-                        </div>
-                    `;
-                    div.onclick = () => { 
-                        document.getElementById('pSym').value = item.symbol; 
-                        box.style.display = 'none'; 
-                    };
-                    box.appendChild(div);
-                }
-            }
+            const res = await fetch(`https://finnhub.io/api/v1/search?q=${query}&token=${KEY}`).then(r => r.json());
+            let html = '';
+            res.result?.slice(0, 5).forEach(item => { html += `<div class="suggest-item" onmousedown="selectItem('${item.symbol}')">${item.description} (${item.symbol})</div>`; });
+            box.innerHTML = html; box.style.display = html ? 'block' : 'none';
         } catch (e) { box.style.display = 'none'; }
     }
+    function selectItem(sym) { document.getElementById('pSym').value = sym; document.getElementById('searchSuggestions').style.display = 'none'; }
 
     async function addAsset() {
-        let s = document.getElementById('pSym').value.toUpperCase();
-        const q = parseFloat(document.getElementById('pQty').value);
+        const s = document.getElementById('pSym').value.toUpperCase(), q = parseFloat(document.getElementById('pQty').value);
         if(!s || !q) return;
-        try {
-            const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${s}&token=${KEY}`).then(res => res.json());
-            if(r.c && r.c > 0) {
-                // Remove Binance prefix for display in the table
-                const cleanSymbol = s.includes("BINANCE:") ? s.split(":")[1].replace("USDT", "") : s;
-                state.assets.push({ id: Date.now(), s: cleanSymbol, q, p: r.c });
-                save();
-                document.getElementById('pSym').value = ''; document.getElementById('pQty').value = '';
-                document.getElementById('searchSuggestions').style.display = 'none';
-            }
-        } catch(e) { alert("API Error."); }
+        const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${s}&token=${KEY}`).then(res => res.json());
+        if(r.c) { state.assets.push({ id: Date.now(), s, q, p: r.c }); logHistory(); save(); }
     }
 
-    function addCash(desc = null, amt = null) {
-        const d = desc || document.getElementById('cDesc').value;
-        const a = amt || parseFloat(document.getElementById('cAmt').value);
-        if(d && a) { 
-            state.cash.unshift({ id: Date.now(), d, a, dt: new Date().toLocaleDateString() }); 
+    // CASH & SUBS
+    function addCash() {
+        const d = document.getElementById('cDesc').value, a = parseFloat(document.getElementById('cAmt').value), rate = parseFloat(document.getElementById('fx').value);
+        if(d && !isNaN(a)) { state.cash.unshift({ id: Date.now(), d, a: a/rate, dt: new Date().toLocaleDateString() }); logHistory(); save(); }
+    }
+    function addSubs() {
+        const n = document.getElementById('sName').value, a = parseFloat(document.getElementById('sAmt').value), rate = parseFloat(document.getElementById('fx').value);
+        if(n && !isNaN(a)) { state.subs.push({ id: Date.now(), n, a: a/rate }); save(); }
+    }
+
+    // NEW GOAL LOGIC
+    function addGoal() {
+        const name = document.getElementById('gName').value, target = parseFloat(document.getElementById('gTarget').value), rate = parseFloat(document.getElementById('fx').value);
+        if(name && target) {
+            state.subGoals.push({ id: Date.now(), name, target: target/rate, saved: 0 });
             save();
-            if(!desc) { document.getElementById('cDesc').value = ''; document.getElementById('cAmt').value = ''; }
+            document.getElementById('gName').value = ''; document.getElementById('gTarget').value = '';
+        }
+    }
+    function depositToGoal(id) {
+        const amt = parseFloat(prompt("Enter amount to move from cash to this goal:"));
+        const rate = parseFloat(document.getElementById('fx').value);
+        if(amt && !isNaN(amt)) {
+            const goal = state.subGoals.find(g => g.id === id);
+            const actualAmt = amt / rate;
+            goal.saved += actualAmt;
+            state.cash.unshift({ id: Date.now(), d: `To Goal: ${goal.name}`, a: -actualAmt, dt: new Date().toLocaleDateString() });
+            save();
         }
     }
 
-    function sellAsset(id) {
-        const asset = state.assets.find(a => a.id === id);
-        if(!asset) return;
-        addCash(`Sold ${asset.s}`, asset.q * asset.p);
-        state.assets = state.assets.filter(a => a.id !== id);
-        save();
+    function logHistory() {
+        const total = state.assets.reduce((acc, a) => acc + (a.q * a.p), 0) + state.cash.reduce((acc, c) => acc + c.a, 0);
+        state.history.push({ t: new Date(), y: total });
+        if(state.history.length > 50) state.history.shift();
     }
-
-    function save() { localStorage.setItem('nexus_final', JSON.stringify(state)); refresh(); }
+    function save() { localStorage.setItem('nexus_apex_v18', JSON.stringify(state)); refresh(); }
 
     function refresh() {
-        const rate = parseFloat(document.getElementById('fx').value);
-        const sym = (rate === 1) ? '$' : (rate === 83.5) ? '₹' : (rate === 0.92) ? '€' : '£';
-        let aTotal = 0, cTotal = state.cash.reduce((s,i) => s + i.a, 0);
-        let burn = Math.abs(state.cash.filter(c => c.a < 0).reduce((s,i) => s + i.a, 0));
+        const rate = parseFloat(document.getElementById('fx').value), cur = rate===1?'$':rate===83.5?'₹':'€';
+        let aT = 0, cT = state.cash.reduce((acc,c) => acc+c.a, 0), sT = state.subs.reduce((acc,s) => acc+s.a, 0);
 
-        const pBody = document.querySelector('#portTable tbody'); pBody.innerHTML = '';
-        state.assets.forEach(a => {
-            const val = a.q * a.p; aTotal += val;
-            pBody.innerHTML += `<tr><td><b>${a.s}</b></td><td>${a.q}</td><td>${sym}${(a.p*rate).toLocaleString()}</td><td>${sym}${(val*rate).toLocaleString()}</td><td><button onclick="sellAsset(${a.id})" class="sell-btn">SELL</button></td></tr>`;
-        });
+        // Tables Rendering
+        document.querySelector('#portTable tbody').innerHTML = state.assets.map(a => {
+            const v = a.q * a.p * crashMultiplier; aT += v;
+            return `<tr><td><b>${a.s}</b></td><td>${a.q}</td><td>${cur}${(a.p*crashMultiplier*rate).toLocaleString()}</td><td>${cur}${(v*rate).toLocaleString()}</td><td><button onclick="state.assets=state.assets.filter(x=>x.id!==${a.id});save()" style="color:var(--danger);border:none;background:none;cursor:pointer">✕</button></td></tr>`;
+        }).join('');
 
-        const cBody = document.querySelector('#cashTable tbody'); cBody.innerHTML = '';
-        state.cash.forEach(c => {
-            cBody.innerHTML += `<tr><td>${c.dt}</td><td>${c.d}</td><td style="color:${c.a>=0? 'var(--accent)' : 'var(--danger)'}">${sym}${(c.a*rate).toLocaleString()}</td><td><button onclick="state.cash=state.cash.filter(x=>x.id!==${c.id});save()" style="color:var(--danger); border:none; background:none; cursor:pointer;">X</button></td></tr>`;
-        });
+        document.querySelector('#subsTable tbody').innerHTML = state.subs.map(s => `<tr><td>${s.n}</td><td>${cur}${(s.a*rate).toLocaleString()}</td><td><button onclick="state.subs=state.subs.filter(x=>x.id!==${s.id});save()" style="color:var(--danger);border:none;background:none;cursor:pointer">✕</button></td></tr>`).join('');
+        document.querySelector('#cashTable tbody').innerHTML = state.cash.map(c => `<tr><td>${c.dt}</td><td>${c.d}</td><td style="color:${c.a<0?'var(--danger)':'var(--accent)'}">${cur}${(c.a*rate).toLocaleString()}</td><td><button onclick="state.cash=state.cash.filter(x=>x.id!==${c.id});save()" style="color:var(--danger);border:none;background:none;cursor:pointer">✕</button></td></tr>`).join('');
 
-        document.getElementById('totalWealth').innerText = sym + ((aTotal + cTotal)*rate).toLocaleString();
-        document.getElementById('sumCash').innerText = sym + (cTotal*rate).toLocaleString();
-        document.getElementById('burnVal').innerText = sym + (burn*rate).toLocaleString();
-        document.getElementById('runwayVal').innerText = (burn > 0) ? Math.round((cTotal/burn)*30) + " Days" : "0 Days";
+        // Goals Rendering
+        document.getElementById('goalsList').innerHTML = state.subGoals.map(g => {
+            const p = Math.min(100, (g.saved / g.target) * 100);
+            return `<div class="goal-item">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <strong>${g.name}</strong>
+                    <span>${cur}${(g.saved*rate).toLocaleString()} / ${cur}${(g.target*rate).toLocaleString()}</span>
+                </div>
+                <div class="meter"><div class="meter-fill" style="width:${p}%; background:var(--info)"></div></div>
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <button class="btn-small" onclick="depositToGoal(${g.id})">+ Add Money</button>
+                    <button class="btn-small" style="background:var(--danger); color:white" onclick="state.subGoals=state.subGoals.filter(x=>x.id!==${g.id});save()">Delete</button>
+                </div>
+            </div>`;
+        }).join('');
 
-        updateCharts(aTotal*rate, cTotal*rate);
+        // Dashboard Calcs
+        const total = aT + cT;
+        document.getElementById('totalWealth').innerText = cur + (total*rate).toLocaleString();
+        document.getElementById('sumCash').innerText = cur + (cT*rate).toLocaleString();
+        document.getElementById('burnVal').innerText = cur + (sT*rate).toLocaleString();
+        const days = sT > 0 ? Math.round((cT / sT) * 30) : (cT > 0 ? "999" : "0");
+        document.getElementById('runwayVal').innerText = (days === "999" ? "365+" : days) + " Days";
+
+        // DYNAMIC GRADING ENGINE (Fixing the "Stuck at B" bug)
+        let score = 0;
+        if(total > 0) {
+            score = 20; // Base presence
+            if (cT > (sT * 12)) score += 40; // High score for 1 year liquidity
+            else if (cT > (sT * 6)) score += 25; // Mid score for 6 months
+            
+            if (state.assets.length >= 5) score += 30; // Diversification mastery
+            else if (state.assets.length >= 2) score += 15;
+            
+            if (sT > 0 && sT < (cT * 0.05)) score += 10; // Efficiency bonus
+        }
+        
+        const finalScore = Math.max(0, Math.min(100, score));
+        const grade = finalScore >= 85 ? 'A+' : finalScore >= 65 ? 'B' : 'C';
+        document.getElementById('healthScore').innerText = grade;
+        document.getElementById('healthScore').style.color = finalScore >= 85 ? 'var(--accent)' : finalScore >= 65 ? 'var(--warn)' : 'var(--danger)';
+        document.getElementById('healthFill').style.width = finalScore + "%";
+        document.getElementById('healthAdvice').innerText = finalScore >= 85 ? "Elite liquidity and diversification." : "Increase asset variety and cash buffer to reach A+.";
+
+        document.getElementById('goalPerc').innerText = Math.min(100, Math.round((total / state.goal) * 100)) + "%";
+        document.getElementById('goalFill').style.width = Math.min(100, Math.round((total / state.goal) * 100)) + "%";
+        updateChart(rate);
     }
 
-    function updateCharts(a, c) {
-        if(mainChart) mainChart.destroy(); if(pieChart) pieChart.destroy();
-        const total = a + c;
-        const graphPoints = total > 0 ? [total * 0.95, total * 0.98, total * 0.99, total] : [0, 0, 0, 0];
-        
-        const ctx1 = document.getElementById('mainChart').getContext('2d');
-        mainChart = new Chart(ctx1, {
+    function updateChart(rate) {
+        if(mainChart) mainChart.destroy();
+        mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
             type: 'line',
-            data: { labels: ['P1','P2','P3','NOW'], datasets: [{ data: graphPoints, borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }] },
-            options: { maintainAspectRatio: false, responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-        const ctx2 = document.getElementById('pieChart').getContext('2d');
-        pieChart = new Chart(ctx2, {
-            type: 'doughnut',
-            data: { labels: ['Assets', 'Cash'], datasets: [{ data: [a, c], backgroundColor: ['#10b981', '#3b82f6'], borderWidth: 0 }] },
-            options: { maintainAspectRatio: false, responsive: true }
+            data: { datasets: [{ label: 'Net Worth', data: state.history.map(h => ({ x: h.t, y: h.y * rate })), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
+            options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { type: 'time', time: { unit: 'minute' }, ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
         });
     }
     window.onload = refresh;
